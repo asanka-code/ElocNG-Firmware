@@ -2,6 +2,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/gpio.h"
+#include "driver/adc.h"
 #include "sdkconfig.h"
 
 #include "esp32/ulp.h"
@@ -45,6 +46,18 @@ static void init_ulp_program(void)
     esp_err_t err = ulp_load_binary(0, ulp_main_bin_start,
             (ulp_main_bin_end - ulp_main_bin_start) / sizeof(uint32_t));
     ESP_ERROR_CHECK(err);
+
+
+    /* Configure ADC channel */
+    /* Note: when changing channel here, also change 'adc_channel' constant
+       in main.S */
+    adc1_config_channel_atten(ADC1_CHANNEL_6, ADC_ATTEN_DB_11);
+    adc1_config_width(ADC_WIDTH_BIT_12);
+    adc1_ulp_enable();
+
+    /* Set low and high thresholds, approx. 1.35V - 1.75V*/
+    ulp_low_thr = 0;
+    ulp_high_thr = 4000;
 }
 
 static void start_ulp_program(void)
